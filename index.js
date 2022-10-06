@@ -26,12 +26,39 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 			console.log("hello");
 		} else if (oldState.channelId === null && newState.channelId != null) {
 			//ここはconnectしたときに発火する場所
+			setValue(newState.id, newState.channelId, "connect");
 			console.log("connect");
 		} else if (oldState.channelId != null && newState.channelId === null) {
 			//ここはdisconnectしたときに発火する場所
+			setValue(newState.id, newState.channelId, "disconnect");
 			console.log("disconnect");
 		}
 	}
 });
 
 client.login(process.env.TOKEN);
+
+function setValue(discordID, channelID, status) {
+	var request = require("request");
+
+	var headers = {
+		"Content-Type": "application/json",
+	};
+
+	var dataString = `{"discordID": ${discordID}, "channelID": ${channelID}, "status": ${status}}`;
+
+	var options = {
+		url: process.env.TOKEN,
+		method: "POST",
+		headers: headers,
+		body: dataString,
+	};
+
+	function callback(error, response, body) {
+		if (!error && response.statusCode == 200) {
+			console.log(body);
+		}
+	}
+
+	request(options, callback);
+}
