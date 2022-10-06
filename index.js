@@ -1,9 +1,27 @@
 require("dotenv").config();
+const axios = require("axios");
 
 const { Client, GatewayIntentBits } = require("discord.js");
 const client = new Client({
 	intents: Object.values(GatewayIntentBits).reduce((a, b) => a | b),
 });
+
+async function setValue(discordID, channelID, status) {
+	const response = await axios.post(
+		process.env.URL,
+		{
+			discordID: discordID,
+			channelID: channelID,
+			status: status,
+		},
+		{
+			headers: {
+				"Content-Type": "application/json",
+			},
+		}
+	);
+	console.log(response);
+}
 
 client.on("ready", () => {
 	console.log(`${client.user.tag}でログイン中`);
@@ -26,39 +44,14 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 			console.log("hello");
 		} else if (oldState.channelId === null && newState.channelId != null) {
 			//ここはconnectしたときに発火する場所
-			setValue(newState.id, newState.channelId, "connect");
 			console.log("connect");
+			setValue(newState.id, newState.channelId, "connect");
 		} else if (oldState.channelId != null && newState.channelId === null) {
 			//ここはdisconnectしたときに発火する場所
-			setValue(newState.id, newState.channelId, "disconnect");
 			console.log("disconnect");
+			setValue(newState.id, oldState.channelId, "disconnect");
 		}
 	}
 });
 
 client.login(process.env.TOKEN);
-
-function setValue(discordID, channelID, status) {
-	var request = require("request");
-
-	var headers = {
-		"Content-Type": "application/json",
-	};
-
-	var dataString = `{"discordID": ${discordID}, "channelID": ${channelID}, "status": ${status}}`;
-
-	var options = {
-		url: process.env.TOKEN,
-		method: "POST",
-		headers: headers,
-		body: dataString,
-	};
-
-	function callback(error, response, body) {
-		if (!error && response.statusCode == 200) {
-			console.log(body);
-		}
-	}
-
-	request(options, callback);
-}
